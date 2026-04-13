@@ -1,0 +1,72 @@
+# 此工作流将在创建 release 时自动上传 Python 包到 PyPI
+# 更多信息请参考：https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-python#publishing-to-package-registries
+
+# 此工作流使用的 actions 未经 GitHub 认证。
+# 它们由第三方提供，并受
+# 独立的服务条款、隐私政策和支持文档约束。
+
+name: 上传 Python 包到 PyPI
+
+on:
+  release:
+    types: [published]  # 当 release 被发布时触发
+
+permissions:
+  contents: read  # 只读仓库内容权限
+
+jobs:
+  # 构建 release 包
+  release-build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4  # 检出代码
+
+      - uses: actions/setup-python@v5  # 设置 Python 环境
+        with:
+          python-version: "3.x"
+
+      - name: 构建 release 分发包
+        run: |
+          # 注意：在这里放置你自己的构建步骤
+          python -m pip install build
+          python -m build
+
+      - name: 上传分发包作为工作流产物
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-dists
+          path: dist/  # 构建输出目录
+
+  # 发布到 PyPI
+  pypi-publish:
+    runs-on: ubuntu-latest
+    needs:
+      - release-build  # 等待构建完成
+    # permissions:
+      # 重要：此权限是可信发布所必需的
+      # id-token: write
+
+    # 强烈建议使用带保护机制的环境进行发布
+    # 更多信息：https://docs.github.com/en/actions/deployment/targeting-different-environments/using-environments-for-deployment#deployment-protection-rules
+    environment:
+      name: pypi
+      # 可选：取消注释并修改为你的 PyPI 项目 URL，用于在部署状态中显示
+      url: https://pypi.org/p/winInput
+      #
+      # 备选方案：如果你的 GitHub Release 名称正好是 PyPI 项目版本号
+      # 可以取消注释下面这一行：
+      # url: https://pypi.org/project/你的项目名/${{ github.event.release.name }}
+
+    steps:
+      - name: 获取 release 分发包
+        uses: actions/download-artifact@v4
+        with:
+          name: release-dists
+          path: dist/
+
+      - name: 发布 release 分发包到 PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          password: ${{ secrets.PYPI_API_TOKEN }}  # 使用 API Token 认证
+          packages-dir: dist/
