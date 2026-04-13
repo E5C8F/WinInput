@@ -15,18 +15,14 @@
 
 ## 📦 安装
 
-### 从 GitHub 安装
-
-```bash
-pip install git+https://github.com/E5C8F/wininput.git
-```
+~~#从 GitHub 安装(pip install git+https://github.com/E5C8F/wininput.git 或 pip install wininput)(此方法暂时未实现,请采用手动安装的方法)~~
 
 ### 手动安装
 
-下载 `wininput.py` 文件，放置到你的项目目录中即可。
+下载 `鼠键.py` 文件，放置到你的项目目录中即可。
 
 ```python
-import wininput
+import 鼠键 as WinInput
 ```
 
 ## 🚀 快速开始
